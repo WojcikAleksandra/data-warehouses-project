@@ -17,13 +17,17 @@ CREATE TABLE DimGeo (
     county_name VARCHAR(50) NOT NULL,
     state_name VARCHAR(20) NOT NULL,
     state_abbr VARCHAR(2) NOT NULL,
-    state_fips SMALLINT NOT NULL
+    state_fips SMALLINT NOT NULL,
+	valid_from_date DATETIME NOT NULL,
+	valid_to_date DATETIME NOT NULL,
+	active_flag CHAR(3) NOT NULL
 );
 
 -- FactPowerOutages
 CREATE TABLE FactPowerOutages (
     id BIGINT NOT NULL PRIMARY KEY,
-    datetime_id BIGINT NOT NULL,
+    date_id BIGINT NOT NULL,
+	time_id TINYINT NOT NULL,
     geo_id INT NOT NULL,
     socioecon_id INT NOT NULL,
     customers_out INT NOT NULL,
@@ -31,7 +35,8 @@ CREATE TABLE FactPowerOutages (
     temp_max DECIMAL(5,2) NULL,
     temp_min DECIMAL(5,2) NULL,
     precipitation_mm DECIMAL(5,2) NULL,
-    FOREIGN KEY (datetime_id) REFERENCES DimDateTime(datetime_id),
+    FOREIGN KEY (date_id) REFERENCES DimDate(date_id),
+	FOREIGN KEY (time_id) REFERENCES DimTime(time_id),
     FOREIGN KEY (geo_id) REFERENCES DimGeo(id),
     FOREIGN KEY (socioecon_id) REFERENCES DimSocioEcon(id)
 );
@@ -39,8 +44,10 @@ CREATE TABLE FactPowerOutages (
 -- FactEvent
 CREATE TABLE FactEvent (
     id BIGINT NOT NULL PRIMARY KEY,
-    begin_datetime_id BIGINT NOT NULL,
-    end_datetime_id BIGINT NOT NULL,
+    begin_date_id BIGINT NOT NULL,
+	begin_time_id TINYINT NOT NULL,
+    end_date_id BIGINT NOT NULL,
+	end_time_id TINYINT NOT NULL,
     geo_id INT NOT NULL,
     deaths_indirect SMALLINT NULL,
     deaths_direct SMALLINT NULL,
@@ -50,7 +57,9 @@ CREATE TABLE FactEvent (
     damage_property BIGINT NULL,
     magnitude SMALLINT NULL,
     type VARCHAR(30) NOT NULL,
-    FOREIGN KEY (begin_datetime_id) REFERENCES DimDateTime(datetime_id),
-    FOREIGN KEY (end_datetime_id) REFERENCES DimDateTime(datetime_id),
+    FOREIGN KEY (begin_date_id) REFERENCES DimDate(date_id),
+	FOREIGN KEY (begin_time_id) REFERENCES DimTime(time_id),
+    FOREIGN KEY (end_date_id) REFERENCES DimDate(date_id),
+	FOREIGN KEY (end_time_id) REFERENCES DimTime(time_id),
     FOREIGN KEY (geo_id) REFERENCES DimGeo(id)
 );
