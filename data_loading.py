@@ -14,6 +14,18 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
+import sys
+
+if len(sys.argv) < 2:
+    print("Brak argumentu roku. Użycie: python data_loading.py <rok>")
+    sys.exit(1)
+
+try:
+    year = int(sys.argv[1])
+except ValueError:
+    print("Nieprawidłowy format roku. Rok musi być liczbą całkowitą.")
+    sys.exit(1)
+
 
 def fetch_census_data(year: int) -> pd.DataFrame:
     """
@@ -29,7 +41,7 @@ def fetch_census_data(year: int) -> pd.DataFrame:
     logging.info(f"Starting data fetch from Census API for year {year}")
 
     valid_state_fips = [f"{i:02d}" for i in range(1, 57) if i not in {3, 7, 14, 43, 52}]
-    variables = "NAME,DP05_0001E,DP03_0062E,DP04_0001E"
+    variables = "DP05_0001E,DP03_0062E,DP04_0001E"
     url = f"https://api.census.gov/data/{year}/acs/acs5/profile"
 
     all_data = []
@@ -66,7 +78,6 @@ def fetch_census_data(year: int) -> pd.DataFrame:
 
     # Rename columns for readability
     df = df.rename(columns={
-        "NAME": "County",
         "DP05_0001E": "Population",
         "DP03_0062E": "Median_Income",
         "DP04_0001E": "Total_Housing_Units",
@@ -77,6 +88,7 @@ def fetch_census_data(year: int) -> pd.DataFrame:
     logging.info(
         f"Successfully combined data from all states for year {year}. Rows: {df.shape[0]}, Columns: {df.shape[1]}")
 
+    df["year"] = year
     return df
 
 
@@ -89,20 +101,43 @@ def fetch_power_outages_data(year: int) -> pd.DataFrame:
     logging.basicConfig(level=logging.INFO)
 
     # Figshare API endpoint
-    figshare_api_url = f"https://api.figshare.com/v2/articles/24237376/files"
+    # figshare_api_url = f"https://api.figshare.com/v2/articles/24237376/files"
 
     # Send GET request to Figshare API
-    response = requests.get(figshare_api_url)
-    if response.status_code != 200:
-        logging.error(f"Failed to retrieve file list from Figshare API. Status code: {response.status_code}")
-        return pd.DataFrame()
+    # response = requests.get(figshare_api_url)
+    # if response.status_code != 200:
+    #     logging.error(f"Failed to retrieve file list from Figshare API. Status code: {response.status_code}")
+    #     return pd.DataFrame()
+
+    file_url = None
+    page = 1
+    while True:
+        figshare_api_url = f"https://api.figshare.com/v2/articles/24237376/files?page={page}"
+        response = requests.get(figshare_api_url)
+        if response.status_code != 200:
+            logging.error(f"Failed to retrieve files from Figshare API, page {page}. Status code: {response.status_code}")
+            break
+        files = response.json()
+        if not files:
+            break
+
+        for file in files:
+            logging.info(f"Found file: {file['name']}")
+            if f"eaglei_outages_{year}.csv" in file['name']:
+                file_url = file['download_url']
+                break
+
+        if file_url:
+            break 
+
+        page += 1
 
     # Find the file for the specified year
-    file_url = None
-    for file in response.json():
-        if f"eaglei_outages_{year}.csv" in file['name']:
-            file_url = file['download_url']
-            break
+    # file_url = None
+    # for file in response.json():
+    #     if f"eaglei_outages_{year}.csv" in file['name']:
+    #         file_url = file['download_url']
+    #         break
 
     if not file_url:
         logging.error(f"File for year {year} not found.")
@@ -225,9 +260,9 @@ def fetch_county_data() -> pd.DataFrame:
 
 
     df = df.rename(columns={
-        'STATEFP': 'state_code',
-        'fips': 'county_fips',
-        'name': 'county_name',
+        'STATEFP': 'state_fips',
+        'COUNTYFP': 'county_fips',
+        'NAME': 'county_name',
         'ALAND': 'land_area_sqm',
         'AWATER': 'water_area_sqm',
         'y': 'lat',
@@ -239,15 +274,24 @@ def fetch_county_data() -> pd.DataFrame:
 # df_counties = fetch_county_data()
 # print(df_counties)
 # print(df_counties.columns)
-# socio = fetch_census_data(2020)
+# df_counties.to_csv('county_data.csv', index=False)
+
+socio = fetch_census_data(year)
 # print(socio)
 # print(socio.columns)
-# outages = fetch_power_outages_data(2014)
+socio.to_csv('socio_data.csv', index=False)
+
+# outages = fetch_power_outages_data(year)
 # print(outages)
 # print(outages.columns)
-# weather = fetch_prism_weather_data(2020)
+# outages.to_csv('outages_data.csv', index=False)
+
+# weather = fetch_prism_weather_data(year)
 # print(weather)
 # print(weather.columns)
-# events = fetch_storm_events(2021)
+# weather.to_csv('weather_data.csv', index=False)
+
+# events = fetch_storm_events(year)
 # print(events)
 # print(events.columns)
+# events.to_csv('storm_events.csv', index=False)
