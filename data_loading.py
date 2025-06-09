@@ -271,27 +271,27 @@ def fetch_county_data() -> pd.DataFrame:
     return df
 
 
-# df_counties = fetch_county_data()
+df_counties = fetch_county_data()
 # print(df_counties)
 # print(df_counties.columns)
-# df_counties.to_csv('county_data.csv', index=False)
+df_counties.to_csv('county_data.csv', index=False)
 
 socio = fetch_census_data(year)
 # print(socio)
 # print(socio.columns)
 socio.to_csv('socio_data.csv', index=False)
 
-# outages = fetch_power_outages_data(year)
+outages = fetch_power_outages_data(year)
 # print(outages)
 # print(outages.columns)
-# outages.to_csv('outages_data.csv', index=False)
+outages.to_csv('outages_data.csv', index=False)
 
-# weather = fetch_prism_weather_data(year)
+weather = fetch_prism_weather_data(year)
 # print(weather)
 # print(weather.columns)
-# weather.to_csv('weather_data.csv', index=False)
+weather.to_csv('weather_data.csv', index=False)
 
-# events = fetch_storm_events(year)
+events = fetch_storm_events(year)
 # print(events)
 # print(events.columns)
-# events.to_csv('storm_events.csv', index=False)
+events.to_csv('storm_events.csv', index=False)
