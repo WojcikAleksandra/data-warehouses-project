@@ -132,13 +132,6 @@ def fetch_power_outages_data(year: int) -> pd.DataFrame:
 
         page += 1
 
-    # Find the file for the specified year
-    # file_url = None
-    # for file in response.json():
-    #     if f"eaglei_outages_{year}.csv" in file['name']:
-    #         file_url = file['download_url']
-    #         break
-
     if not file_url:
         logging.error(f"File for year {year} not found.")
         return pd.DataFrame()
