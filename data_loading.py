@@ -2,6 +2,7 @@ import gzip
 import io
 import logging
 import re
+from sqlalchemy import create_engine
 from io import StringIO
 
 import pandas as pd
@@ -99,15 +100,6 @@ def fetch_power_outages_data(year: int) -> pd.DataFrame:
     """
     # Set up logging
     logging.basicConfig(level=logging.INFO)
-
-    # Figshare API endpoint
-    # figshare_api_url = f"https://api.figshare.com/v2/articles/24237376/files"
-
-    # Send GET request to Figshare API
-    # response = requests.get(figshare_api_url)
-    # if response.status_code != 200:
-    #     logging.error(f"Failed to retrieve file list from Figshare API. Status code: {response.status_code}")
-    #     return pd.DataFrame()
 
     file_url = None
     page = 1
@@ -233,6 +225,47 @@ def fetch_storm_events(year: int, data_type: str = 'details') -> pd.DataFrame:
             df = pd.read_csv(f)
 
         logging.info(f"File {filename} downloaded and loaded. Rows: {df.shape[0]}, Columns: {df.shape[1]}")
+        cols = ['INJURIES_DIRECT', 'INJURIES_INDIRECT', 'DEATHS_DIRECT', 'DEATHS_INDIRECT']
+        for col in cols:
+            df[col] = (df[col].astype(str).str.replace(r'\D', '', regex=True))      
+            df[col] = pd.to_numeric(df[col], errors='coerce').astype(int)
+        df['MAGNITUDE'] = pd.to_numeric(df['MAGNITUDE'], errors='coerce')
+        df['MAGNITUDE'] = df['MAGNITUDE'].round().astype('Int16')
+        df.insert(0, 'id', range(1, len(df) + 1))
+
+        df['DAMAGE_PROPERTY'] = df['DAMAGE_PROPERTY'].astype(str).str.strip().str.upper()
+        mask_k = df['DAMAGE_PROPERTY'].str.endswith('K', na=False)
+        df.loc[mask_k, 'DAMAGE_PROPERTY'] = (
+            df.loc[mask_k, 'DAMAGE_PROPERTY'].str.replace('K', '', regex=False).astype(float) * 1_000
+        )
+        mask_m = df['DAMAGE_PROPERTY'].str.endswith('M', na=False)
+        df.loc[mask_m, 'DAMAGE_PROPERTY'] = (
+            df.loc[mask_m, 'DAMAGE_PROPERTY'].str.replace('M', '', regex=False).astype(float) * 1_000_000
+        )
+        df['DAMAGE_PROPERTY'] = pd.to_numeric(df['DAMAGE_PROPERTY'], errors='coerce').round().astype('Int64')
+
+        df['DAMAGE_CROPS'] = df['DAMAGE_CROPS'].astype(str).str.strip().str.upper()
+        mask_k = df['DAMAGE_CROPS'].str.endswith('K', na=False)
+        df.loc[mask_k, 'DAMAGE_CROPS'] = (
+            df.loc[mask_k, 'DAMAGE_CROPS'].str.replace('K', '', regex=False).astype(float) * 1_000
+        )
+        mask_m = df['DAMAGE_CROPS'].str.endswith('M', na=False)
+        df.loc[mask_m, 'DAMAGE_CROPS'] = (
+            df.loc[mask_m, 'DAMAGE_CROPS'].str.replace('M', '', regex=False).astype(float) * 1_000_000
+        )
+        df['DAMAGE_CROPS'] = pd.to_numeric(df['DAMAGE_CROPS'], errors='coerce').round().astype('Int64')
+
+        server = 'DESKTOP-EU3CAMF'
+        database = 'PowerOutages_staging_db'
+        username = 'sa'
+        password = 'loginAAW16!'
+        connection_string = (
+            f"mssql+pyodbc://{username}:{password}@{server}/{database}"
+            "?driver=ODBC+Driver+17+for+SQL+Server"
+        )
+        engine = create_engine(connection_string)
+        df[['id', 'INJURIES_DIRECT', 'INJURIES_INDIRECT', 'DEATHS_DIRECT', 'DEATHS_INDIRECT', 'MAGNITUDE', 'DAMAGE_CROPS', 'DAMAGE_PROPERTY']].to_sql('StormEvents', con=engine, if_exists='append', index=False)
+
         return df
 
     except Exception as e:
@@ -264,25 +297,25 @@ def fetch_county_data() -> pd.DataFrame:
     return df
 
 
-df_counties = fetch_county_data()
+# df_counties = fetch_county_data()
 # print(df_counties)
 # print(df_counties.columns)
-df_counties.to_csv('county_data.csv', index=False)
+# df_counties.to_csv('county_data.csv', index=False)
 
-socio = fetch_census_data(year)
+# socio = fetch_census_data(year)
 # print(socio)
 # print(socio.columns)
-socio.to_csv('socio_data.csv', index=False)
+# socio.to_csv('socio_data.csv', index=False)
 
-outages = fetch_power_outages_data(year)
+# outages = fetch_power_outages_data(year)
 # print(outages)
 # print(outages.columns)
-outages.to_csv('outages_data.csv', index=False)
+# outages.to_csv('outages_data.csv', index=False)
 
-weather = fetch_prism_weather_data(year)
+# weather = fetch_prism_weather_data(year)
 # print(weather)
 # print(weather.columns)
-weather.to_csv('weather_data.csv', index=False)
+# weather.to_csv('weather_data.csv', index=False)
 
 events = fetch_storm_events(year)
 # print(events)
