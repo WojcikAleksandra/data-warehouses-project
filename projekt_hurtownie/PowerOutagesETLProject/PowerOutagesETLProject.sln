@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36127.28 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{C9674DCB-5085-4A16-B785-4C70DD1589BD}") = "PowerOutagesETLProject", "PowerOutagesETLProject\PowerOutagesETLProject.dtproj", "{0EC8C7FE-26A0-3464-B4D4-7B29ACC02F0F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Development|Default = Development|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0EC8C7FE-26A0-3464-B4D4-7B29ACC02F0F}.Development|Default.ActiveCfg = Development
+		{0EC8C7FE-26A0-3464-B4D4-7B29ACC02F0F}.Development|Default.Build.0 = Development
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {33854C50-1258-4561-A1BE-3E6940525AFC}
+	EndGlobalSection
+EndGlobal
