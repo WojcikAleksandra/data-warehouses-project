@@ -76,12 +76,11 @@ BEGIN
     SET @currentDate = DATEADD(DAY, 1, @currentDate);
 END;
 
-
 IF OBJECT_ID('dbo.DimTime', 'U') IS NOT NULL DROP TABLE dbo.DimTime;
 GO
 
 CREATE TABLE dbo.DimTime (
-    time_id tinyint NOT NULL PRIMARY KEY,
+    time_id smallint NOT NULL PRIMARY KEY,
     time varchar(8) NOT NULL,
     hour tinyint NOT NULL,
     minute tinyint NOT NULL
@@ -89,8 +88,8 @@ CREATE TABLE dbo.DimTime (
 GO
 
 DECLARE @currentTime DATETIME = '00:00:00';
-DECLARE @endTime DATETIME = '23:45:00';
-DECLARE @time_id TINYINT = 1;
+DECLARE @endTime DATETIME = '23:59:00';
+DECLARE @time_id SMALLINT = 1;
 
 WHILE @currentTime <= @endTime
 BEGIN
@@ -107,5 +106,5 @@ BEGIN
     );
 
 	SET @time_id += 1;
-    SET @currentTime = DATEADD(MINUTE, 15, @currentTime);
+    SET @currentTime = DATEADD(MINUTE, 1, @currentTime);
 END;
